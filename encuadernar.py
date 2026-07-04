@@ -230,14 +230,12 @@ def overlay_marcas(ancho, alto, con_plegado, imp):
     c = canvas.Canvas(buf, pagesize=(ancho, alto))
     cx = ancho / 2
     if imp["mostrar_plegado"] and con_plegado:
+        # linea punteada solo en la cara externa: por ahi se dobla
         c.setStrokeColor(GRIS)
         c.setLineWidth(0.6)
         c.setDash(3, 3)
         c.line(cx, 0, cx, alto)
         c.setDash()
-        c.setFillColor(GRIS)
-        c.setFont("Helvetica", 7)
-        c.drawCentredString(cx, alto - 10, "doblar por aqui (cara externa)")
     if imp["mostrar_corte"]:
         c.setStrokeColor(NEGRO)
         c.setLineWidth(0.5)

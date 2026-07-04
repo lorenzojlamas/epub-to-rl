@@ -149,7 +149,7 @@
     #text(size: 9pt, fill: luma(30%))[
       Impreso y encuadernado a mano por #C.encuadernador \
       #C.ciudad — #C.fecha \
-      Versión #cfg.version \
+      #cfg.version \
       #C.detalle
     ]
     #v(9mm)
