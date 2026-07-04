@@ -1,0 +1,18 @@
+titulo: "El mito del ciudadano ingenuo"
+autores: "Mónica Beatriz Bornia"
+idioma: es
+version: "v01"
+
+dedicatoria: ""   # completar antes de imprimir el regalo
+
+colofon:
+  posicion: inicio
+  encuadernador: Loren
+  ciudad: Buenos Aires, Argentina
+  fecha: julio de 2026
+  detalle: "Encuadernación cosida · tapa blanda"
+
+interior:
+  indice: true
+  # el EPUB trae cubierta, portada e índice propios; usamos los nuestros
+  omitir: [Cubierta.xhtml, portada.xhtml, indice.xhtml]

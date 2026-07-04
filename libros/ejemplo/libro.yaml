@@ -1,0 +1,19 @@
+# Libro de ejemplo para probar el pipeline de punta a punta.
+titulo: "La Prueba"
+autores: "Autora de Prueba"
+idioma: es
+version: "v01"
+
+dedicatoria: |
+  Para quien reciba este ejemplar,
+  con todo el cariño del mundo.
+
+colofon:
+  posicion: inicio
+  encuadernador: Loren
+  ciudad: Buenos Aires, Argentina
+  fecha: julio de 2026
+  detalle: "Encuadernación cosida · tapa blanda"
+
+imposicion:
+  hojas_por_cuadernillo: 4

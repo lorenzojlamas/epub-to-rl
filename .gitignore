@@ -1,0 +1,19 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Salida generada
+libro-listo-para-imponer.pdf
+salida_cuadernillos/
+libros/*/salida/
+
+# Contenido de los libros: no va al repo (derechos de autor)
+*.epub
+*.pdf
+
+# macOS
+.DS_Store

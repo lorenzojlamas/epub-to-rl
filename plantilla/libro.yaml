@@ -1,0 +1,71 @@
+# =====================================================================
+# Config de un libro para encuadernar.
+# Copiá este archivo como `libro.yaml` dentro de la carpeta del libro
+# (junto al .epub) y editá lo que necesites. Todo lo que no pongas
+# usa estos valores por defecto.
+# =====================================================================
+
+titulo: "Título del libro"
+subtitulo: ""                        # opcional, va debajo del título en la portada
+autores: "Autora Autorísima"
+idioma: es                           # es | en | ... (activa el silabeo correcto)
+version: "v01"                       # versión de esta edición; sale en el colofón y al pie del lomo
+
+# --- Personalización del regalo ---
+# La dedicatoria va en página propia (recto), antes del cuerpo.
+# Dejala vacía ("") para omitir la página.
+dedicatoria: |
+  Para vos.
+
+# --- Colofón ---
+colofon:
+  posicion: inicio                   # inicio (verso de la portada) | final | "no"
+  encuadernador: Loren
+  ciudad: Buenos Aires, Argentina
+  fecha: julio de 2026
+  detalle: "Encuadernación cosida · tapa blanda"
+  lema_top:
+    - Hecho con amor.
+    - El conocimiento no es negocio.
+  lema_bottom: Hack the world.
+
+# --- Interior (tipografía y página) ---
+interior:
+  fuente: "Libertinus Serif"         # viene embebida en Typst; poné otra si tenés ./fuentes/
+  tamano: 10.5                       # pt
+  nivel_capitulo: 1                  # nivel de heading del EPUB que abre capítulo en página impar
+  margen_interior_mm: 19             # medianil: más ancho del lado del cosido
+  margen_exterior_mm: 13
+  margen_superior_mm: 15
+  margen_inferior_mm: 17
+  portadilla: true                   # media portada (solo el título) en la pág. 1
+  portada: true                      # portada tipográfica (título + autor)
+  saltar_portada_epub: true          # descarta la imagen de tapa que trae el EPUB
+  notas_al_pie: true                 # convierte las notas del EPUB en notas AL PIE reales
+  indice: false                      # genera un índice propio con números de página
+  omitir: []                         # archivos del EPUB a descartar enteros; la corrida
+                                     # lista los nombres, p. ej.: [Cubierta.xhtml, indice.xhtml]
+
+# --- Imposición en cuadernillos ---
+imposicion:
+  hojas_por_cuadernillo: 4           # 4 hojas A4 = 16 carillas A5 por cuadernillo
+  guardas_inicio: 4                  # carillas en blanco al inicio (4 = 2 hojas; usar número PAR)
+  guardas_final: 4                   # carillas en blanco al final
+  margen_corte_mm: 8                 # marca de refilado en el borde delantero
+  largo_marca_mm: 6
+  mostrar_plegado: true
+  mostrar_corte: true
+
+# --- Tapa (se imprime aparte, cuando ya mediste el lomo cosido) ---
+#   python encuadernar.py tapa <carpeta> --lomo <mm>
+tapa:
+  hoja: A4                           # A4 | A3 (apaisada)
+  # ancho de página TERMINADA (después del refilado). Por defecto se
+  # calcula solo: 148 - margen_corte_mm. Descomentá para forzar otro.
+  # ancho_pagina_mm: 140
+  alto_pagina_mm: 210
+  color_fondo: "#f2ede3"             # color de fondo de toda la tapa
+  color_texto: "#2b2b2b"
+  imagen_fondo: ""                   # ruta relativa a la carpeta del libro (cubre toda la tapa)
+  mostrar_lema_contratapa: true      # lema_bottom del colofón, centrado en la contratapa
+  lomo_texto: auto                   # auto: "Título · Autor" | texto propio | "" para lomo liso
