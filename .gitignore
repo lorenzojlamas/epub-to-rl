@@ -13,7 +13,7 @@ libros/*/salida/
 
 # Contenido de los libros: no va al repo (derechos de autor)
 *.epub
-*.pdf
+# *.pdf
 
 # macOS
 .DS_Store

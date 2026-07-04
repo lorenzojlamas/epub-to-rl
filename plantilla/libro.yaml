@@ -36,7 +36,7 @@ interior:
   nivel_capitulo: 1                  # nivel de heading del EPUB que abre capítulo en página impar
   margen_interior_mm: 19             # medianil: más ancho del lado del cosido
   margen_exterior_mm: 13
-  margen_superior_mm: 18
+  margen_superior_mm: 20
   margen_inferior_mm: 20
   portadilla: true                   # media portada (solo el título) en la pág. 1
   portada: true                      # portada tipográfica (título + autor)

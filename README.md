@@ -23,12 +23,34 @@ Qué gana sobre Calibre:
 
 ## Setup (una sola vez)
 
+Corre en cualquier sistema con pandoc, typst y Python 3: no hay nada
+específico de macOS (las tipografías vienen embebidas en Typst, así que
+el PDF sale idéntico en cualquier máquina).
+
+**macOS:**
+
 ```bash
 brew install pandoc typst
+```
+
+**Manjaro / Arch:**
+
+```bash
+sudo pacman -S pandoc-cli typst
+# (en algunas ramas de Manjaro el paquete se llama "pandoc" a secas)
+```
+
+**Después, en ambos:**
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+Para llevar el proyecto a otra máquina: copiá la carpeta entera (o cloná
+el repo). Ojo: los `.epub` y todo `libros/*/salida/` están en el
+`.gitignore`, así que si viajás vía git tenés que copiar los EPUBs aparte.
 
 ## Flujo de trabajo
 

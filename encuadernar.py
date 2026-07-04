@@ -94,7 +94,10 @@ def correr(cmd, **kw):
     try:
         subprocess.run(cmd, check=True, **kw)
     except FileNotFoundError:
-        sys.exit(f"No está instalado '{cmd[0]}' (¿brew install {cmd[0]}?)")
+        sys.exit(
+            f"No está instalado '{cmd[0]}' "
+            f"(macOS: brew install {cmd[0]} · Manjaro/Arch: sudo pacman -S {cmd[0]})"
+        )
     except subprocess.CalledProcessError as e:
         sys.exit(f"Falló {cmd[0]} (código {e.returncode})")
 
