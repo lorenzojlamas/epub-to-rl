@@ -14,6 +14,8 @@ libros/*/salida/
 # Contenido de los libros: no va al repo (derechos de autor)
 *.epub
 # *.pdf
+# el libro de prueba es nuestro, viaja con el repo (sirve de smoke test)
+!libros/ejemplo/*.epub
 
 # macOS
 .DS_Store

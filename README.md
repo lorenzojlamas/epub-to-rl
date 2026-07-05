@@ -12,7 +12,7 @@ Qué gana sobre Calibre:
 
 - **Notas al pie de verdad**: las notas del EPUB (que Calibre deja como
   bloques a mitad de página o al final del capítulo) se convierten en
-  `#footnote` de Typst, al pie de la página que las referencia.
+  `#footnote` de Typst, al pie de la página que las referencia. 
 - **Márgenes espejados** con medianil más ancho del lado del cosido.
 - **Preliminares de libro real**: portadilla, portada, dedicatoria
   personalizada por regalo, colofón con versión.
@@ -33,14 +33,25 @@ el PDF sale idéntico en cualquier máquina).
 brew install pandoc typst
 ```
 
-**Manjaro / Arch:**
+**Manjaro / Arch (sirve para instalación fresca, desde cero):**
 
 ```bash
-sudo pacman -S pandoc-cli typst
-# (en algunas ramas de Manjaro el paquete se llama "pandoc" a secas)
+# 1. Sistema al día PRIMERO (en Arch/Manjaro instalar paquetes sobre un
+#    sistema desactualizado rompe cosas: nunca instalar sin -Syu antes)
+sudo pacman -Syu
+
+# 2. Todo lo necesario (git incluido; --needed saltea lo que ya esté)
+sudo pacman -S --needed git python pandoc-cli typst
+# si pandoc-cli no existe en tu rama de Manjaro: sudo pacman -S pandoc
+
+# 3. Verificar que quedaron en el PATH
+pandoc --version && typst --version
 ```
 
-**Después, en ambos:**
+En Arch el paquete `python` ya trae `venv` y `ensurepip`: no hace falta
+instalar `python-pip` aparte, el venv se bootstrapea su propio pip.
+
+**Después, en ambos sistemas:**
 
 ```bash
 python3 -m venv .venv
@@ -48,9 +59,19 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+**Smoke test** (el repo trae un libro de prueba sintético en
+`libros/ejemplo/`, con notas al pie, imagen ancha y código):
+
+```bash
+python encuadernar.py libro libros/ejemplo/
+# tiene que terminar con "Bloque: ... cuadernillos ..." y dejar
+# libros/ejemplo/salida/interior-a5.pdf listo para abrir y mirar
+```
+
 Para llevar el proyecto a otra máquina: copiá la carpeta entera (o cloná
-el repo). Ojo: los `.epub` y todo `libros/*/salida/` están en el
-`.gitignore`, así que si viajás vía git tenés que copiar los EPUBs aparte.
+el repo). Ojo: los `.epub` reales y todo `libros/*/salida/` están en el
+`.gitignore`, así que si viajás vía git tenés que copiar los EPUBs aparte
+(el de `libros/ejemplo/` sí viaja: es sintético, generado por nosotros).
 
 ## Flujo de trabajo
 
