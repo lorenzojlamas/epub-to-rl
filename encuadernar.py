@@ -113,6 +113,59 @@ def listar_secciones(epub):
         )
 
 
+def inspeccionar_epub(epub):
+    """(nombre, resumen) de cada archivo del EPUB, en orden de lectura."""
+    NS_OPF = "{http://www.idpf.org/2007/opf}"
+    import xml.etree.ElementTree as ET
+
+    def resumen_html(html):
+        html = re.sub(r"<head\b.*?</head>", " ", html, flags=re.S | re.I)
+        titulo = re.search(r"<h[1-6][^>]*>(.*?)</h[1-6]>", html, re.S | re.I)
+        cuerpo = re.sub(r"<[^>]+>", " ", html)
+        cuerpo = re.sub(r"\s+", " ", cuerpo).strip()
+        partes = []
+        if titulo:
+            t = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", titulo.group(1))).strip()
+            if t:
+                partes.append(f"«{t}»")
+        if cuerpo:
+            partes.append(cuerpo[:70] + ("…" if len(cuerpo) > 70 else ""))
+        if not partes:
+            imgs = len(re.findall(r"<img\b|<image\b", html, re.I))
+            partes.append(f"(solo {imgs} imagen/es)" if imgs else "(vacío)")
+        return "  ".join(partes)
+
+    with zipfile.ZipFile(epub) as z:
+        try:
+            contenedor = ET.fromstring(z.read("META-INF/container.xml"))
+            ruta_opf = contenedor.find(
+                ".//{urn:oasis:names:tc:opendocument:xmlns:container}rootfile"
+            ).get("full-path")
+            opf = ET.fromstring(z.read(ruta_opf))
+            base = str(Path(ruta_opf).parent)
+            hrefs = {
+                item.get("id"): item.get("href")
+                for item in opf.iter(f"{NS_OPF}item")
+            }
+            orden = [
+                hrefs[ref.get("idref")]
+                for ref in opf.iter(f"{NS_OPF}itemref")
+                if ref.get("idref") in hrefs
+            ]
+            rutas = [(h, str(Path(base) / h) if base != "." else h) for h in orden]
+        except Exception:
+            # EPUB raro: caer a listar los html alfabéticamente
+            rutas = [(n, n) for n in z.namelist() if re.search(r"\.x?html?$", n, re.I)]
+        salida = []
+        for href, ruta in rutas:
+            try:
+                html = z.read(ruta).decode("utf-8", "ignore")
+            except KeyError:
+                continue
+            salida.append((Path(href).name, resumen_html(html)))
+        return salida
+
+
 def convertir_epub(epub, build, cfg):
     """pandoc: EPUB -> cuerpo.typ + media/, con rutas relativas al build."""
     build.mkdir(parents=True, exist_ok=True)
@@ -354,6 +407,21 @@ def cmd_libro(args):
     generar_cuadernillos(interior, cfg, salida, borrar_primera=args.borrar_primera)
 
 
+def cmd_secciones(args):
+    carpeta = Path(args.carpeta)
+    epub = encontrar_epub(carpeta)
+    print(f"Secciones de {epub.name}, en orden de lectura:\n")
+    for nombre, resumen in inspeccionar_epub(epub):
+        print(f"  {nombre:<28} {resumen}")
+    print(
+        "\nPara descartar una sección entera, copiá su nombre en libro.yaml:\n"
+        "  interior:\n"
+        "    omitir: [Cubierta.xhtml, indice.xhtml]\n"
+        "Candidatas típicas: la cubierta, la portada y el índice propios del\n"
+        "EPUB (este pipeline genera los suyos), y la página legal."
+    )
+
+
 def cmd_tapa(args):
     carpeta = Path(args.carpeta)
     cfg = cargar_config(carpeta, args.config)
@@ -382,6 +450,11 @@ def main():
     p_libro.add_argument("--borrar-primera", action="store_true",
                          help="con --desde-pdf: descartar la 1.ª página")
     p_libro.set_defaults(func=cmd_libro)
+
+    p_secc = sub.add_parser("secciones",
+                            help="lista las secciones del EPUB para decidir qué omitir")
+    p_secc.add_argument("carpeta")
+    p_secc.set_defaults(func=cmd_secciones)
 
     p_tapa = sub.add_parser("tapa", help="genera la tapa con el lomo medido")
     p_tapa.add_argument("carpeta")

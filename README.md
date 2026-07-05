@@ -83,6 +83,11 @@ python encuadernar.py init libros/mi-libro/
 
 # 2. Copiar el .epub adentro, editar libro.yaml (título, dedicatoria, colofón…)
 
+# 2b. Ver qué trae el EPUB adentro y decidir qué descartar (su cubierta,
+#     su índice, la página legal…): cada sección con título y resumen
+python encuadernar.py secciones libros/mi-libro/
+#     → los nombres que no quieras van a interior.omitir del libro.yaml
+
 # 3. Generar interior + cuadernillos
 python encuadernar.py libro libros/mi-libro/
 
@@ -111,7 +116,8 @@ Todos los valores y su documentación están en `plantilla/libro.yaml`
   La versión sale en el colofón y al pie del lomo.
 - `colofon:` — encuadernador, ciudad, fecha, lemas.
 - `interior.omitir:` — archivos del EPUB a descartar enteros (su cubierta,
-  su portada, su índice…). La corrida lista los nombres disponibles.
+  su portada, su índice…). `encuadernar.py secciones <carpeta>` te muestra
+  cada archivo con su título y un resumen para decidir.
 - `interior.indice: true` — índice propio con números de página.
 - `imposicion.hojas_por_cuadernillo` — 4 hojas A4 = 16 carillas por cuadernillo.
 - `tapa.hoja: A4 | A3` — en A4 entra justo (con el refilado por defecto);
