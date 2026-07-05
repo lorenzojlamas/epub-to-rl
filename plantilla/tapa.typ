@@ -25,7 +25,11 @@
 #set par(justify: false)
 
 // ---------- fondo ----------
-#place(dx: ox, dy: oy, block(width: total-w, height: ph, fill: rgb(T.color_fondo)))
+// color_fondo vacío = tapa blanca (recomendado en impresoras monocromo:
+// un fondo de color sale como tramado gris y no llega a los bordes)
+#if T.color_fondo != "" {
+  place(dx: ox, dy: oy, block(width: total-w, height: ph, fill: rgb(T.color_fondo)))
+}
 #if T.imagen_fondo != "" {
   place(dx: ox, dy: oy, block(width: total-w, height: ph, clip: true,
     image(T.imagen_fondo, width: 100%, height: 100%, fit: "cover")))
@@ -53,10 +57,10 @@
 }
 // versión al pie del lomo (donde las editoriales ponen el logo)
 #if cfg.version != "" and T.lomo_mm >= 5 {
-  place(dx: ox + pw, dy: oy + ph - 16mm, block(width: lomo, height: 12mm,
-    align(center + horizon,
+  place(dx: ox + pw, dy: oy + ph - 26mm, block(width: lomo, height: 22mm,
+    align(center + bottom,
       rotate(90deg, reflow: true,
-        text(size: calc.min(T.lomo_mm * 1.1, 8) * 1pt, fill: rgb(T.color_texto).lighten(20%),
+        text(size: calc.min(T.lomo_mm * 1.1, 8) * 1pt,
           cfg.version)))))
 }
 
@@ -72,7 +76,7 @@
     #v(10mm)
     #text(size: 13pt, cfg.autores)
   ]
-  #align(center + bottom, text(size: 9pt, fill: rgb(T.color_texto).lighten(25%))[
+  #align(center + bottom, text(size: 9pt)[
     #smallcaps[encuadernado a mano]
   ])
 ])
@@ -98,10 +102,14 @@
   place(dx: ox, dy: oy - 10mm,
     text(size: 7pt, fill: luma(35%))[tapa · lomo #T.lomo_mm mm · imprimir al 100% (sin escalar)])
 } else {
-  // la tapa ocupa toda la hoja: línea punteada suave sobre el pliegue
-  // (queda escondida en la doblez)
+  // La tapa ocupa toda la hoja: marcas punteadas muy sutiles que
+  // desaparecen solas — las de plegado quedan escondidas en la doblez
+  // y las de corte se van con el refile de los costados.
+  let sutil = (paint: luma(60%), thickness: 0.3pt, dash: "loosely-dotted")
   for x in pliegues {
-    place(dx: x, dy: oy, line(angle: 90deg, length: ph,
-      stroke: (paint: luma(55%), thickness: 0.3pt, dash: "loosely-dotted")))
+    place(dx: x, dy: oy, line(angle: 90deg, length: ph, stroke: sutil))
+  }
+  for x in (ox, ox + total-w) {
+    place(dx: x, dy: oy, line(angle: 90deg, length: ph, stroke: sutil))
   }
 }

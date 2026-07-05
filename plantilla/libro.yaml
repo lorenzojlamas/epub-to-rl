@@ -64,8 +64,9 @@ tapa:
   # calcula solo: 148 - margen_corte_mm. Descomentá para forzar otro.
   # ancho_pagina_mm: 140
   alto_pagina_mm: 210
-  color_fondo: "#f2ede3"             # color de fondo de toda la tapa
-  color_texto: "#2b2b2b"
+  color_fondo: ""                    # vacío = tapa blanca (lo mejor en impresora monocromo);
+                                     # un hex tipo "#f2ede3" si imprimís en color
+  color_texto: "#000000"
   imagen_fondo: ""                   # ruta relativa a la carpeta del libro (cubre toda la tapa)
   mostrar_lema_contratapa: true      # lema_bottom del colofón, centrado en la contratapa
   lomo_texto: auto                   # auto: "Título · Autor" | texto propio | "" para lomo liso
