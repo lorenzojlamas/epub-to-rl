@@ -73,6 +73,15 @@ el repo). Ojo: los `.epub` reales y todo `libros/*/salida/` están en el
 `.gitignore`, así que si viajás vía git tenés que copiar los EPUBs aparte
 (el de `libros/ejemplo/` sí viaja: es sintético, generado por nosotros).
 
+## Comandos
+
+| Comando | Qué hace |
+|---|---|
+| `encuadernar.py init <carpeta>` | crea la carpeta del libro con un `libro.yaml` para editar |
+| `encuadernar.py secciones <carpeta>` | radiografía del EPUB: cada sección con título y resumen, para decidir qué va a `interior.omitir` |
+| `encuadernar.py libro <carpeta>` | todo: interior A5 + cuadernillos listos para imprimir |
+| `encuadernar.py tapa <carpeta> --lomo <mm>` | la tapa, con el grosor real del lomo ya cosido |
+
 ## Flujo de trabajo
 
 ```bash
