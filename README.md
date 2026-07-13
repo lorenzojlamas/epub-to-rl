@@ -4,15 +4,24 @@ De un EPUB a un libro cosido a mano, en un comando. Reemplaza la conversión
 de Calibre (y a BookbinderJS) con un pipeline propio:
 
 ```
-EPUB ──pandoc──▶ Typst ──▶ interior A5 tipográfico ──▶ cuadernillos A4 para imprimir
-                                                        (y la tapa aparte, con el lomo medido)
+EPUB ──pandoc──▶ Typst ──▶ interior tipográfico ──▶ hojas A4 para imprimir
+                                                    (y la tapa aparte, con el lomo medido)
 ```
+
+Siempre se imprime en hojas A4; el `formato:` del `libro.yaml` decide el
+tamaño del libro terminado:
+
+- **A5** (default): 4 carillas por hoja — doblar y coser.
+- **A6** (bolsillo): 8 carillas por hoja — cada pliego se corta al medio
+  y rinde dos cuadernillos; tipografía, márgenes y tapa se ajustan solos.
 
 Qué gana sobre Calibre:
 
 - **Notas al pie de verdad**: las notas del EPUB (que Calibre deja como
   bloques a mitad de página o al final del capítulo) se convierten en
-  `#footnote` de Typst, al pie de la página que las referencia. 
+  `#footnote` de Typst, al pie de la página que las referencia. Soporta
+  los dos dialectos comunes: popups de Sigil (`..._footnote-N`) y
+  endnotes estilo Word (`_ftnN`, p. ej. los EPUB del Vaticano).
 - **Márgenes espejados** con medianil más ancho del lado del cosido.
 - **Preliminares de libro real**: portadilla, portada, dedicatoria
   personalizada por regalo, colofón con versión.
@@ -111,10 +120,16 @@ La salida queda en `libros/mi-libro/salida/`:
 
 | Archivo | Qué es |
 |---|---|
-| `interior-a5.pdf` | el libro terminado, para revisar en pantalla |
-| `cuadernillos/cuadernillo-NN.pdf` | un PDF por cuadernillo, con marcas de plegado y corte |
+| `interior-a5.pdf` (o `-a6`) | el libro terminado, para revisar en pantalla (NO se imprime) |
+| `cuadernillos/cuadernillo-NN.pdf` | A5: un PDF por cuadernillo, con marcas de plegado y corte |
+| `cuadernillos/pliego-NN.pdf` | A6: un PDF por pliego = DOS cuadernillos (mitad de abajo y de arriba) |
 | `tapa-lomo-XX mm.pdf` | tapa completa, imprimir al 100 % sin escalar |
 | `build/` | intermedios (main.typ, config.json) para depurar |
+
+En A6 la mitad de arriba de cada hoja sale rotada 180° a propósito
+(cabeza contra cabeza): después de cortar por la línea continua se gira
+esa mitad, y el borde cortado queda siempre en la cabeza del libro.
+El dúplex A6 se voltea por el borde LARGO (el A5 por el corto).
 
 ## Config por libro (`libro.yaml`)
 
@@ -123,11 +138,16 @@ Todos los valores y su documentación están en `plantilla/libro.yaml`
 
 - `titulo`, `autores`, `version`, `dedicatoria` — la personalización del regalo.
   La versión sale en el colofón y al pie del lomo.
+- `formato: A5 | A6` — tamaño del libro terminado (A6 = bolsillo, mitad
+  de A5; ajusta solo tipografía, márgenes, imposición y tapa).
 - `colofon:` — encuadernador, ciudad, fecha, lemas.
 - `interior.omitir:` — archivos del EPUB a descartar enteros (su cubierta,
   su portada, su índice…). `encuadernar.py secciones <carpeta>` te muestra
   cada archivo con su título y un resumen para decidir.
 - `interior.indice: true` — índice propio con números de página.
+- `interior.margen_*_mm` — márgenes medidos sobre el libro TERMINADO:
+  la plantilla compensa sola los mm que el refile le corta al borde
+  delantero (`imposicion.margen_corte_mm`).
 - `imposicion.hojas_por_cuadernillo` — 4 hojas A4 = 16 carillas por cuadernillo.
 - `tapa.hoja: A4 | A3` — en A4 entra justo (con el refilado por defecto);
   en A3 quedan además marcas de corte afuera de la tapa.
@@ -147,8 +167,10 @@ python encuadernar.py libro libros/mi-libro/ --desde-pdf x.pdf # flujo viejo (PD
 - `plantilla/libro.typ` — la cara tipográfica del interior. Editable.
 - `plantilla/tapa.typ` — layout de la tapa con lomo paramétrico.
 - `plantilla/filtro.lua` — curaduría del EPUB en pandoc: notas-endnote →
-  notas al pie reales, links internos → texto plano, omisión de archivos,
-  descarte de la imagen de cubierta.
+  notas al pie reales (Sigil y Word), links internos → texto plano (los
+  de navegación a archivos omitidos se van enteros), títulos partidos en
+  dos headings fusionados, omisión de archivos, descarte de la imagen de
+  cubierta y de títulos colgados al final.
 - `plantilla/libro.yaml` — defaults documentados de toda la config.
 - Tipografías propias: crear `fuentes/` en la raíz y poner los .ttf/.otf;
   se pasa solo a Typst (`interior.fuente` elige la familia).

@@ -3,9 +3,18 @@
 --
 --  · Notas tipo endnote (bloques al final del capítulo, con links de
 --    ida y vuelta) -> notas al pie REALES (#footnote de Typst).
+--    Soporta los dos dialectos vistos hasta ahora: Divs `..._footnote-N`
+--    (Sigil/popup) y párrafos `[N] texto` con ancla `_ftnN`/`_ednN`
+--    (los EPUB que vienen de Word, p. ej. los del Vaticano).
 --  · Divs de capítulo desarmados: los saltos de página por capítulo
 --    de la plantilla no funcionan adentro de contenedores.
---  · Links internos -> texto plano (en papel no hay hipervínculos).
+--  · Links internos -> texto plano (en papel no hay hipervínculos);
+--    los que apuntan a un archivo omitido (botones de navegación tipo
+--    «Volver al índice») se van enteros.
+--  · Títulos partidos en dos headings consecutivos del mismo nivel
+--    («CAPÍTULO PRIMERO» + su título temático) se fusionan en uno.
+--  · Secciones que quedaron sin contenido (p. ej. el capítulo «Notas»
+--    después de cosechar las notas) pierden también su título.
 --  · Archivos del EPUB listados en ENC_OMITIR (separados por coma,
 --    p. ej. "Cubierta.xhtml,indice.xhtml") se descartan enteros.
 --
@@ -32,6 +41,19 @@ end
 
 local function es_nota(id)
   return id and id:match("footnote%-%d+$") ~= nil
+end
+
+-- ¿Este párrafo es una nota estilo Word? Empieza con el backlink numerado:
+-- un Link con id ..._ftnN (o _ednN) que apunta de vuelta a la referencia.
+local function ancla_nota_word(b)
+  if b.t ~= "Para" and b.t ~= "Plain" then return nil end
+  local x = b.content[1]
+  if x and x.t == "Link"
+     and (x.identifier:match("_ftn%d+$") or x.identifier:match("_edn%d+$"))
+     and (x.target:match("_ftnref%d+$") or x.target:match("_ednref%d+$")) then
+    return x.identifier
+  end
+  return nil
 end
 
 -- Saca del contenido de la nota el backlink numerado que la encabeza
@@ -99,6 +121,16 @@ function Pandoc(doc)
         end
       end,
     })
+    -- 1b) ídem para las notas estilo Word (párrafos "[N] texto")
+    tmp = tmp:walk({
+      Para = function(el)
+        local id = ancla_nota_word(el)
+        if id then
+          notas["#" .. id] = limpiar_nota(pandoc.Blocks({ el }))
+          return {}
+        end
+      end,
+    })
     -- 2) reemplazar cada referencia por una nota al pie de verdad
     tmp = tmp:walk({
       Link = function(el)
@@ -108,10 +140,21 @@ function Pandoc(doc)
     })
   end
 
-  -- 3) links internos restantes -> texto plano
+  -- 3) links internos restantes -> texto plano; los que apuntan a un
+  --    archivo omitido son navegación («Volver al índice») y se van
+  --    enteros, junto con el párrafo si queda vacío
   tmp = tmp:walk({
     Link = function(el)
-      if el.target:sub(1, 1) == "#" then return el.content end
+      if el.target:sub(1, 1) == "#" then
+        if omitido(el.target:sub(2)) then return {} end
+        return el.content
+      end
+    end,
+    Para = function(el)
+      if #el.content == 0 then return {} end
+    end,
+    Plain = function(el)
+      if #el.content == 0 then return {} end
     end,
   })
 
@@ -119,6 +162,29 @@ function Pandoc(doc)
   tmp = tmp:walk({
     Div = function(el) return el.content end,
   })
+
+  -- 4b) fusionar títulos partidos: dos headings consecutivos del mismo
+  --     nivel se vuelven uno solo con salto de línea (si no, el segundo
+  --     abriría OTRA página de capítulo)
+  local fusionados = pandoc.Blocks({})
+  for _, b in ipairs(tmp.blocks) do
+    local ult = fusionados[#fusionados]
+    if b.t == "Header" and ult and ult.t == "Header" and ult.level == b.level then
+      ult.content:insert(pandoc.LineBreak())
+      ult.content:extend(b.content)
+    else
+      fusionados:insert(b)
+    end
+  end
+  tmp = pandoc.Pandoc(fusionados, tmp.meta)
+
+  -- 4c) títulos colgados al final del documento sin contenido debajo
+  --     (p. ej. el capítulo «Notas» después de cosechar las notas): fuera.
+  --     Solo al final: un heading vacío a mitad de libro puede ser un
+  --     título de presentación deliberado (frontispicios y similares).
+  while #tmp.blocks > 0 and tmp.blocks[#tmp.blocks].t == "Header" do
+    tmp.blocks:remove(#tmp.blocks)
+  end
 
   -- 5) descartar la(s) imagen(es) de tapa del EPUB: todo bloque que sea
   --    solo una imagen y aparezca ANTES del primer título es la cubierta

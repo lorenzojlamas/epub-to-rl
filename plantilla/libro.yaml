@@ -11,6 +11,12 @@ autores: "Autora Autorísima"
 idioma: es                           # es | en | ... (activa el silabeo correcto)
 version: "v01"                       # versión de esta edición; sale en el colofón y al pie del lomo
 
+# Tamaño del libro terminado. Siempre se imprime en hojas A4:
+#   A5  4 carillas por hoja: doblar y coser
+#   A6  8 carillas por hoja: cortar la hoja al medio y doblar (bolsillo).
+#       Ajusta solo tipografía, márgenes y tapa a la escala menor.
+formato: A5
+
 # --- Personalización del regalo ---
 # La dedicatoria va en página propia (recto), antes del cuerpo.
 # Dejala vacía ("") para omitir la página.
@@ -34,8 +40,10 @@ interior:
   fuente: "Libertinus Serif"         # viene embebida en Typst; poné otra si tenés ./fuentes/
   tamano: 10.5                       # pt
   nivel_capitulo: 1                  # nivel de heading del EPUB que abre capítulo en página impar
-  margen_interior_mm: 19             # medianil: más ancho del lado del cosido
-  margen_exterior_mm: 13
+  # Los márgenes se miden sobre el libro TERMINADO: la plantilla suma sola
+  # al exterior los mm que después se lleva el refile (margen_corte_mm).
+  margen_interior_mm: 15             # medianil: del lado del cosido
+  margen_exterior_mm: 13             # borde delantero, YA refilado
   margen_superior_mm: 20
   margen_inferior_mm: 20
   portadilla: true                   # media portada (solo el título) en la pág. 1
@@ -57,13 +65,17 @@ imposicion:
   mostrar_corte: true
 
 # --- Tapa (se imprime aparte, cuando ya mediste el lomo cosido) ---
-#   python encuadernar.py tapa <carpeta> --lomo <mm>
+# OJO: el ancho del LOMO no se configura acá. Se mide con regla sobre el
+# libro ya cosido y se pasa por línea de comandos:
+#   python encuadernar.py tapa <carpeta> --lomo 11.5
+# (el texto del lomo escala solo con ese grosor; ver plantilla/tapa.typ)
 tapa:
   hoja: A4                           # A4 | A3 (apaisada)
-  # ancho de página TERMINADA (después del refilado). Por defecto se
-  # calcula solo: 148 - margen_corte_mm. Descomentá para forzar otro.
+  # Medidas de página TERMINADA (después del refilado). Por defecto se
+  # calculan solas según el formato (ancho − margen_corte_mm; alto del
+  # formato). Descomentá para forzar otras.
   # ancho_pagina_mm: 140
-  alto_pagina_mm: 210
+  # alto_pagina_mm: 210
   color_fondo: ""                    # vacío = tapa blanca (lo mejor en impresora monocromo);
                                      # un hex tipo "#f2ede3" si imprimís en color
   color_texto: "#000000"

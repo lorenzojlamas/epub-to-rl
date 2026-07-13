@@ -14,6 +14,8 @@
 #let lomo = T.lomo_mm * 1mm
 #let pw = T.ancho_pagina_mm * 1mm      // ancho de página TERMINADA (post refilado)
 #let ph = T.alto_pagina_mm * 1mm
+// escala tipográfica: la tapa está dibujada para A5; en A6 acompaña
+#let esc = calc.max(T.alto_pagina_mm / 210, 0.72)
 
 #let hoja = if T.hoja == "A3" { (w: 420mm, h: 297mm) } else { (w: 297mm, h: 210mm) }
 #let total-w = pw * 2 + lomo
@@ -37,9 +39,9 @@
 
 // ---------- contratapa (izquierda) ----------
 #if T.mostrar_lema_contratapa and cfg.colofon.lema_bottom != "" {
-  place(dx: ox, dy: oy, block(width: pw, height: ph, inset: 16mm,
+  place(dx: ox, dy: oy, block(width: pw, height: ph, inset: 16mm * esc,
     align(center + horizon,
-      text(size: 11pt, style: "italic", cfg.colofon.lema_bottom))))
+      text(size: 11pt * esc, style: "italic", cfg.colofon.lema_bottom))))
 }
 
 // ---------- lomo ----------
@@ -65,18 +67,18 @@
 }
 
 // ---------- frente (derecha) ----------
-#place(dx: ox + pw + lomo, dy: oy, block(width: pw, height: ph, inset: 15mm)[
+#place(dx: ox + pw + lomo, dy: oy, block(width: pw, height: ph, inset: 15mm * esc)[
   #align(center)[
-    #v(26mm)
-    #text(size: 22pt, weight: "bold", cfg.titulo)
+    #v(26mm * esc)
+    #text(size: 22pt * esc, weight: "bold", cfg.titulo)
     #if cfg.subtitulo != "" [
-      #v(2.5mm)
-      #text(size: 12pt, style: "italic", cfg.subtitulo)
+      #v(2.5mm * esc)
+      #text(size: 12pt * esc, style: "italic", cfg.subtitulo)
     ]
-    #v(10mm)
-    #text(size: 13pt, cfg.autores)
+    #v(10mm * esc)
+    #text(size: 13pt * esc, cfg.autores)
   ]
-  #align(center + bottom, text(size: 9pt)[
+  #align(center + bottom, text(size: 9pt * esc)[
     #smallcaps[encuadernado a mano]
   ])
 ])

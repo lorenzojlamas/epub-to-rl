@@ -1,0 +1,24 @@
+titulo: "Magnifica Humanitas"
+subtitulo: "Sobre la custodia de la persona humana en el tiempo de la inteligencia artificial"
+autores: "León XIV"
+idioma: es
+version: "v01"
+formato: A6      # de bolsillo: entra en la cartera
+
+dedicatoria: ""   # completar antes de imprimir el regalo
+
+colofon:
+  posicion: inicio
+  encuadernador: Loren
+  ciudad: Buenos Aires, Argentina
+  fecha: julio de 2026
+  detalle: "Encuadernación cosida · tapa blanda"
+
+interior:
+  indice: true
+  # El EPUB trae cubierta, portada tipográfica, página legal e índice
+  # propios; usamos los nuestros.
+  # OJO: Section0007.xhtml ("Notas") NO va acá: el filtro cosecha de ahí
+  # las 224 notas y las convierte en notas al pie; si la omitís, las
+  # referencias [N] quedan muertas en el texto.
+  omitir: [titlepage.xhtml, title.xhtml, copyright.xhtml, contents.xhtml]

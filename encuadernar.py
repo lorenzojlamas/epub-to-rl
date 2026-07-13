@@ -2,8 +2,11 @@
 """
 encuadernar.py — de EPUB a libro cosido a mano, en un comando.
 =================================================================
-Flujo completo: EPUB -> pandoc -> Typst -> PDF A5 tipográfico ->
-imposición en cuadernillos A4 listos para imprimir en dúplex manual.
+Flujo completo: EPUB -> pandoc -> Typst -> PDF tipográfico ->
+imposición en hojas A4 listas para imprimir en dúplex manual.
+Dos formatos de libro (libro.yaml: formato):
+  A5  4 carillas por hoja A4: doblar y coser (default)
+  A6  8 carillas por hoja A4: cortar al medio, doblar y coser (bolsillo)
 La tapa se genera aparte, cuando ya cosiste y mediste el lomo real.
 
 Comandos:
@@ -55,6 +58,29 @@ PLANTILLAS = RAIZ / "plantilla"
 GRIS = Color(0.5, 0.5, 0.5)
 NEGRO = Color(0, 0, 0)
 
+# Tamaño de página del libro TERMINADO (antes del refile), en mm.
+#   A5: 2 carillas por cara de A4 (4 por hoja); se dobla y listo.
+#   A6: 4 carillas por cara de A4 (8 por hoja); se corta la hoja al medio
+#       y cada mitad se dobla — libro de bolsillo.
+FORMATOS = {
+    "A5": (148, 210),
+    "A6": (105, 148),
+}
+
+# Ajustes de fábrica para A6: los defaults del yaml están pensados para
+# A5 y a la mitad del tamaño quedan enormes. Lo que el usuario ponga en
+# su libro.yaml pisa esto igual que siempre.
+DEFAULTS_A6 = {
+    "interior": {
+        "tamano": 9.5,
+        "margen_interior_mm": 12,
+        "margen_exterior_mm": 10,
+        "margen_superior_mm": 14,
+        "margen_inferior_mm": 15,
+    },
+    "imposicion": {"margen_corte_mm": 5},
+}
+
 
 # ====================== config ======================
 
@@ -73,10 +99,23 @@ def cargar_config(carpeta, ruta_config=None):
     ruta = Path(ruta_config) if ruta_config else carpeta / "libro.yaml"
     if not ruta.exists():
         sys.exit(f"No encuentro {ruta}. Creala con: python encuadernar.py init {carpeta}")
-    cfg = fusionar(copy.deepcopy(defaults), yaml.safe_load(ruta.read_text()))
-    # ancho de tapa por defecto = A5 menos el refilado del borde delantero
+    propio = yaml.safe_load(ruta.read_text()) or {}
+    formato = str(propio.get("formato", defaults.get("formato", "A5"))).upper()
+    if formato not in FORMATOS:
+        sys.exit(f"formato: {formato} no existe; opciones: {', '.join(FORMATOS)}")
+    cfg = copy.deepcopy(defaults)
+    if formato == "A6":
+        fusionar(cfg, copy.deepcopy(DEFAULTS_A6))
+    cfg = fusionar(cfg, propio)
+    cfg["formato"] = formato
+    ancho, alto = FORMATOS[formato]
+    cfg["interior"]["pagina_ancho_mm"] = ancho
+    cfg["interior"]["pagina_alto_mm"] = alto
+    # ancho de tapa por defecto = página menos el refilado del borde delantero
     if not cfg["tapa"].get("ancho_pagina_mm"):
-        cfg["tapa"]["ancho_pagina_mm"] = 148 - cfg["imposicion"]["margen_corte_mm"]
+        cfg["tapa"]["ancho_pagina_mm"] = ancho - cfg["imposicion"]["margen_corte_mm"]
+    if not cfg["tapa"].get("alto_pagina_mm"):
+        cfg["tapa"]["alto_pagina_mm"] = alto
     cfg["tapa"].setdefault("lomo_mm", 0)
     return cfg
 
@@ -204,10 +243,10 @@ def generar_interior(carpeta, cfg, salida):
         sys.exit("plantilla/libro.typ perdió el marcador {{CUERPO}}")
     (build / "main.typ").write_text(plantilla.replace("{{CUERPO}}", cuerpo))
     (build / "config.json").write_text(json.dumps(cfg, ensure_ascii=False, indent=1))
-    interior = salida / "interior-a5.pdf"
+    interior = salida / f"interior-{cfg['formato'].lower()}.pdf"
     compilar_typst(build, "main.typ", interior)
     paginas = len(PdfReader(str(interior)).pages)
-    print(f"  interior: {interior}  ({paginas} páginas A5)")
+    print(f"  interior: {interior}  ({paginas} páginas {cfg['formato']})")
     return interior
 
 
@@ -280,6 +319,68 @@ def imponer(writer_bloque, aw, ah, cfg):
     return cuadernillos, total
 
 
+# ---------- imposición A6: 4 carillas por cara, 8 por hoja A4 ----------
+
+def tamanos_pliegos_a6(total, hojas_por_cuadernillo):
+    """Cada pliego A4 rinde DOS cuadernillos A6: el de la mitad de abajo
+    y el de la mitad de arriba. Devuelve (carillas_abajo, carillas_arriba)
+    por pliego; el último se reparte parejo para no acumular blancas."""
+    ppc = hojas_por_cuadernillo * 4          # carillas por cuadernillo
+    pliegos = []
+    resto = total
+    while resto > 0:
+        if resto >= ppc * 2:
+            pliegos.append((ppc, ppc))
+        elif resto <= ppc:
+            pliegos.append((math.ceil(resto / 4) * 4, 0))
+        else:
+            abajo = math.ceil(resto / 8) * 4
+            pliegos.append((abajo, math.ceil((resto - abajo) / 4) * 4))
+        resto -= sum(pliegos[-1])
+    return pliegos
+
+
+def imponer_a6(writer_bloque, aw, ah, cfg):
+    """Hojas A4 verticales con una grilla de 2×2 carillas A6. La fila de
+    abajo va derecha; la de arriba va ROTADA 180° (cabeza contra cabeza):
+    así, después del corte central, el borde cortado queda en la cabeza
+    de los dos cuadernillos y el pie conserva el borde de fábrica."""
+    buf = io.BytesIO()
+    writer_bloque.write(buf)
+    buf.seek(0)
+    paginas = PdfReader(buf).pages
+    total = len(paginas)
+
+    pliegos = []
+    base = 0
+    for tam_ab, tam_ar in tamanos_pliegos_a6(total, cfg["imposicion"]["hojas_por_cuadernillo"]):
+        caras_ab = orden_cuadernillo(tam_ab)
+        caras_ar = orden_cuadernillo(tam_ar)
+        base_ar = base + tam_ab
+        w = PdfWriter()
+        for cara_i in range(max(len(caras_ab), len(caras_ar))):
+            hoja = PageObject.create_blank_page(width=aw * 2, height=ah * 2)
+            if cara_i < len(caras_ab):           # fila de abajo, derecha
+                pi, pd = caras_ab[cara_i]
+                for idx, tx in ((pi, 0), (pd, aw)):
+                    gidx = base + idx - 1
+                    if gidx < total:
+                        hoja.merge_transformed_page(
+                            paginas[gidx], Transformation().translate(tx=tx, ty=0))
+            if cara_i < len(caras_ar):           # fila de arriba, rotada 180°
+                pi, pd = caras_ar[cara_i]
+                for idx, tx in ((pi, aw), (pd, 0)):   # espejada: la rotación la endereza
+                    gidx = base_ar + idx - 1
+                    if gidx < total:
+                        hoja.merge_transformed_page(
+                            paginas[gidx],
+                            Transformation().rotate(180).translate(tx=tx + aw, ty=ah * 2))
+            w.add_page(hoja)
+        pliegos.append((w, aw * 2, ah * 2, tam_ab, tam_ar))
+        base += tam_ab + tam_ar
+    return pliegos, total
+
+
 def overlay_marcas(ancho, alto, con_plegado, imp):
     """Marcas: plegado central (solo cara externa) + corte en el borde delantero."""
     buf = io.BytesIO()
@@ -306,12 +407,49 @@ def overlay_marcas(ancho, alto, con_plegado, imp):
     return PdfReader(buf).pages[0]
 
 
-def aplicar_marcas(writer, ancho, alto, imp):
+def overlay_marcas_a6(ancho, alto, con_plegado, imp):
+    """Marcas del pliego A6: corte central horizontal (línea continua),
+    plegado vertical de cada mitad (punteada, solo cara externa) y refile
+    en los bordes delanteros — también a caballo del corte, para que cada
+    mitad conserve su marca."""
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=(ancho, alto))
+    cx, cy = ancho / 2, alto / 2
+    if con_plegado:
+        # corte al medio: continua y fina, en la cara de arriba de cada hoja
+        c.setStrokeColor(NEGRO)
+        c.setLineWidth(0.4)
+        c.line(0, cy, ancho, cy)
+        c.setFillColor(GRIS)
+        c.setFont("Helvetica", 6)
+        c.drawString(2 * mm, cy + 1.2 * mm, "cortar")
+        if imp["mostrar_plegado"]:
+            c.setStrokeColor(GRIS)
+            c.setLineWidth(0.6)
+            c.setDash(3, 3)
+            c.line(cx, 0, cx, alto)
+            c.setDash()
+    if imp["mostrar_corte"]:
+        c.setStrokeColor(NEGRO)
+        c.setLineWidth(0.5)
+        xi = imp["margen_corte_mm"] * mm
+        xd = ancho - imp["margen_corte_mm"] * mm
+        L = imp["largo_marca_mm"] * mm
+        for x in (xi, xd):
+            c.line(x, alto, x, alto - L)
+            c.line(x, 0, x, L)
+            c.line(x, cy - L / 2, x, cy + L / 2)
+    c.save()
+    buf.seek(0)
+    return PdfReader(buf).pages[0]
+
+
+def aplicar_marcas(writer, ancho, alto, imp, overlay=overlay_marcas):
     buf = io.BytesIO()
     writer.write(buf)
     buf.seek(0)
-    externa = overlay_marcas(ancho, alto, True, imp)
-    interna = overlay_marcas(ancho, alto, False, imp)
+    externa = overlay(ancho, alto, True, imp)
+    interna = overlay(ancho, alto, False, imp)
     out = PdfWriter()
     for i, pg in enumerate(PdfReader(buf).pages):
         pg.merge_page(externa if i % 2 == 0 else interna)
@@ -321,23 +459,46 @@ def aplicar_marcas(writer, ancho, alto, imp):
 
 def generar_cuadernillos(pdf_interior, cfg, salida, borrar_primera=False):
     bloque, aw, ah = preparar_bloque(pdf_interior, cfg, borrar_primera)
-    cuadernillos, total = imponer(bloque, aw, ah, cfg)
     carpeta_c = salida / "cuadernillos"
     if carpeta_c.exists():
         shutil.rmtree(carpeta_c)
     carpeta_c.mkdir(parents=True)
     imp = cfg["imposicion"]
     hojas_totales = 0
-    for i, (w, W, H, tam) in enumerate(cuadernillos, start=1):
-        con_marcas = aplicar_marcas(w, W, H, imp)
-        ruta = carpeta_c / f"cuadernillo-{i:02d}.pdf"
-        with open(ruta, "wb") as f:
-            con_marcas.write(f)
-        hojas = tam // 4
-        hojas_totales += hojas
-        print(f"  {ruta.name}: {hojas} hojas A4 ({tam} carillas)")
-    print(f"\nBloque: {total} carillas A5 · {len(cuadernillos)} cuadernillos · {hojas_totales} hojas A4")
-    print("Imprimir cada cuadernillo en dúplex manual (voltear por el borde corto).")
+
+    if cfg["formato"] == "A6":
+        pliegos, total = imponer_a6(bloque, aw, ah, cfg)
+        num_cuad = 0
+        for i, (w, W, H, tam_ab, tam_ar) in enumerate(pliegos, start=1):
+            con_marcas = aplicar_marcas(w, W, H, imp, overlay=overlay_marcas_a6)
+            ruta = carpeta_c / f"pliego-{i:02d}.pdf"
+            with open(ruta, "wb") as f:
+                con_marcas.write(f)
+            hojas = len(con_marcas.pages) // 2
+            hojas_totales += hojas
+            cuales = [num_cuad + 1] + ([num_cuad + 2] if tam_ar else [])
+            num_cuad += len(cuales)
+            desc = " y ".join(str(c) for c in cuales)
+            print(f"  {ruta.name}: {hojas} hojas A4 → cuadernillo/s {desc} ({tam_ab + tam_ar} carillas)")
+        print(f"\nBloque: {total} carillas A6 · {num_cuad} cuadernillos · {hojas_totales} hojas A4")
+        print("Imprimir cada pliego en dúplex manual (voltear por el borde LARGO).")
+        print("Después, por pliego: cortar las hojas al medio por la línea continua,")
+        print("girar la mitad de arriba 180° (quedó patas arriba a propósito: así el")
+        print("corte cae siempre en la cabeza) y doblar cada mitad por la punteada.")
+        print("Abajo = primer cuadernillo del pliego; arriba = el siguiente.")
+    else:
+        cuadernillos, total = imponer(bloque, aw, ah, cfg)
+        for i, (w, W, H, tam) in enumerate(cuadernillos, start=1):
+            con_marcas = aplicar_marcas(w, W, H, imp)
+            ruta = carpeta_c / f"cuadernillo-{i:02d}.pdf"
+            with open(ruta, "wb") as f:
+                con_marcas.write(f)
+            hojas = tam // 4
+            hojas_totales += hojas
+            print(f"  {ruta.name}: {hojas} hojas A4 ({tam} carillas)")
+        print(f"\nBloque: {total} carillas A5 · {len(cuadernillos)} cuadernillos · {hojas_totales} hojas A4")
+        print("Imprimir cada cuadernillo en dúplex manual (voltear por el borde corto).")
+
     print("Después de coser: medí el grosor del lomo y generá la tapa con")
     print(f"  python encuadernar.py tapa <carpeta> --lomo <mm>")
 
