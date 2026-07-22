@@ -1,3 +1,12 @@
+# Pipeline de libros (EPUB -> Typst -> cuadernillos)
 reportlab
 pypdf
 PyYAML
+
+# Taller / CAD: cuna + peine para punzar (cuna/cuna.py)
+# build123d trae OCP vía cadquery-ocp-novtk (sin VTK).
+# ocp_vscode se PINEA a 4.0.0: sin el pin, el resolver de pip backtrackea a
+# versiones viejas que piden un orjson sin wheel y tira ResolutionImpossible.
+# Un solo venv (Python 3.12) cubre pipeline + CAD.
+build123d
+ocp_vscode==4.0.0

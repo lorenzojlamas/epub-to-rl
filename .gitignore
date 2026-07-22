@@ -11,6 +11,9 @@ libro-listo-para-imponer.pdf
 salida_cuadernillos/
 libros/*/salida/
 
+# STL generados por el modelo CAD (se regeneran con cuna/cuna.py)
+cuna/stl/
+
 # Contenido de los libros: no va al repo (derechos de autor)
 *.epub
 # *.pdf
