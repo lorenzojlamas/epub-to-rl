@@ -10,6 +10,9 @@
 #let cfg = json("config.json")
 #let I = cfg.interior
 #let nivel-cap = I.nivel_capitulo
+// Nivel de encabezado que lista el índice. Por defecto, el del capítulo;
+// una Biblia (libro = h1, capítulos = h2) lo pone en 2 para listar capítulos.
+#let indice-nivel = I.at("indice_nivel", default: nivel-cap)
 
 // Tamaño de página según el formato del libro (A5 o A6, lo fija
 // encuadernar.py en config.json). `esc` escala los blancos verticales
@@ -244,7 +247,7 @@
     // títulos partidos que el filtro fusionó con salto de línea:
     // en el índice van en una sola línea, separados por un punto medio
     show linebreak: h(0.5em) + [·] + h(0.5em)
-    outline(title: none, depth: 1)
+    outline(title: none, target: heading.where(level: indice-nivel))
   }
   pagebreak()
 }

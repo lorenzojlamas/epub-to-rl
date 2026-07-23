@@ -22,3 +22,5 @@ cuna/stl/
 
 # macOS
 .DS_Store
+
+.cache

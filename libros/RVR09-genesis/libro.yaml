@@ -1,0 +1,17 @@
+titulo: "Génesis"
+subtitulo: "Biblia Reina Valera 1909"
+autores: "RVR09"
+idioma: es
+
+version: "RVR09"
+colofon:
+  posicion: inicio
+  encuadernador: Loren
+  ciudad: Buenos Aires, Argentina
+  fecha: julio de 2026
+  detalle: "Encuadernación cosida · tapa blanda"
+
+
+interior:
+  indice: true
+  indice_nivel: 2

@@ -1,0 +1,18 @@
+titulo: "Génesis"
+subtitulo: "Traducción en Lenguaje Actual Interconfesional"
+autores: "TLAI"
+idioma: es
+version: "TLAI"
+formato: A6
+
+colofon:
+  posicion: inicio
+  encuadernador: Loren
+  ciudad: Buenos Aires, Argentina
+  fecha: julio de 2026
+  detalle: "Encuadernación cosida · tapa blanda"
+
+
+interior:
+  indice: true
+  indice_nivel: 2

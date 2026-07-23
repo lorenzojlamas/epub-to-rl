@@ -1,0 +1,55 @@
+# Títulos de capítulo curados para Génesis (RVR1909 y cualquier versión).
+# Son etiquetas descriptivas nuestras (editables), NO salen de la fuente.
+# biblia.py los muestra como subtítulo bajo el número de cada capítulo y en
+# el índice. Editá, borrá o dejá en blanco cualquiera; para desactivarlos del
+# todo, corré con --sin-titulos.
+1:  La creación del mundo
+2:  El huerto de Edén
+3:  La caída del hombre
+4:  Caín y Abel
+5:  Los descendientes de Adán
+6:  La maldad humana y el arca de Noé
+7:  El diluvio
+8:  El fin del diluvio
+9:  El pacto de Dios con Noé
+10: Las naciones descendientes de Noé
+11: La torre de Babel; descendientes de Sem
+12: El llamamiento de Abram
+13: Abram y Lot se separan
+14: Abram rescata a Lot; Melquisedec
+15: El pacto de Dios con Abram
+16: Agar e Ismael
+17: El pacto y la circuncisión
+18: La promesa de Isaac; Abraham intercede por Sodoma
+19: Destrucción de Sodoma y Gomorra
+20: Abraham y Abimelec
+21: Nacimiento de Isaac; despedida de Agar
+22: Dios prueba a Abraham
+23: Muerte y sepultura de Sara
+24: Isaac y Rebeca
+25: Muerte de Abraham; Jacob y Esaú
+26: Isaac en Gerar
+27: Jacob obtiene la bendición
+28: El sueño de Jacob en Betel
+29: Jacob con Labán; Lea y Raquel
+30: Los hijos de Jacob y su prosperidad
+31: Jacob huye de Labán
+32: Jacob lucha en Peniel
+33: Reconciliación de Jacob y Esaú
+34: Dina y los siquemitas
+35: Jacob regresa a Betel; muerte de Raquel
+36: Los descendientes de Esaú
+37: José y sus sueños; vendido por sus hermanos
+38: Judá y Tamar
+39: José en casa de Potifar
+40: José interpreta dos sueños en la cárcel
+41: José interpreta los sueños de Faraón
+42: El primer viaje de los hermanos a Egipto
+43: El segundo viaje a Egipto
+44: La copa de plata
+45: José se da a conocer a sus hermanos
+46: Jacob desciende a Egipto
+47: Jacob ante Faraón; la administración de José
+48: Jacob bendice a Efraín y Manasés
+49: Jacob bendice a sus hijos; su muerte
+50: Sepultura de Jacob; muerte de José
